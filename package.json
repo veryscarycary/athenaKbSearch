@@ -1,7 +1,7 @@
 {
   "name": "wistful-bison",
   "version": "1.0.0",
-  "description": "Account Query Server for Athena",
+  "description": "Knowledge Base Article Query Server for Athena",
   "main": "./server/index.js",
   "scripts": {
     "start": "nodemon server/index.js $PORT"
