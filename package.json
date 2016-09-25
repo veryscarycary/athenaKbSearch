@@ -23,6 +23,8 @@
     "express-session": "^1.14.1",
     "morgan": "^1.7.0",
     "nodemon": "^1.10.2",
-    "request": "^2.74.0"
+    "pg": "^6.1.0",
+    "request": "^2.74.0",
+    "sequelize": "^3.24.3"
   }
 }

@@ -1,7 +1,7 @@
-const chalk = require('chalk');
+const mw = require('./config/middleware.js');
 //set port to default port or POST variable provided by user
-const port = process.argv[2] || require('./urls.js').default; 
+const port = process.argv[2] || mw.urls.default; 
 
 //set server to listen to port
 require('./server.js').listen(port, () => 
-  console.log(chalk.green.bold(`Athena User RESTful API listening on port ${port}.`)));
+  console.log(mw.chalk.green.bold(`Athena KB RESTful API listening on port ${port}.`)));
