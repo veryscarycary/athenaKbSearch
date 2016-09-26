@@ -1,8 +1,8 @@
-const router = require('express').Router();
+const router = require('../config/middleware.js').router();
 const api = require('./controller.js');
 
-router.route('/api/:username')
-  .get(api.getUser);
+router.get('/api/:kb/stub', api.getStub);
+// router.get('/api/search', api.getSearch);
 
 // router.route('/api/user/:username/:password')
 //   .get(api.checkAuth)
@@ -10,8 +10,6 @@ router.route('/api/:username')
 //   .put(api.editUser)
 //   .delete(api.deleteUser);
 
-router.get('/', (req, res) => {
-  res.status(200).send();
-})
+router.get('/', api.pingDb)
 
 module.exports = router;

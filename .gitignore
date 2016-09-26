@@ -12,3 +12,5 @@ npm-debug.log
 .floo
 .floobit
 .flooignore
+
+dbAuth.js

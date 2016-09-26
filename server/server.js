@@ -1,18 +1,14 @@
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
+'use strict' 
+const mw = require('./config/middleware.js');
+require('./db/index.js');
+const app = mw.express();
 
 //middleware and routes
 app.use(
   require('morgan')('dev'),
-  bodyParser.json(),
-  bodyParser.urlencoded({extended: true}),
-  // require('express-session')({ TO BE IMPLEMENTED L8Z
-  //   secret: 'It\'s a SECRET', //https://www.youtube.com/watch?v=gMUEFZXkmDAw
-  //   saveUninitialized: false,
-  //   resave: true
-  // }),
-  express.static(`${__dirname}/../public`), 
+  mw.bodyParser.json(),
+  mw.bodyParser.urlencoded({extended: true}),
+  mw.express.static(`${__dirname}/../public`), 
   require('./resources/router.js')
 );
 
