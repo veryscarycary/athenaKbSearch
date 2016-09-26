@@ -1,13 +1,16 @@
+'use strict'
+let mongoose = require('mongoose');
+mongoose.Promise = global.Promise; //fixes depreciated mongoose promise by implementing ES6 promise.
+
 module.exports = {
+  urls: require('./urls.js'),
   express: require('express'),
-  session: require('express-session'),
   router: require('express').Router,
+  mongoose: mongoose,
   bodyParser: require('body-parser'),
   chalk: require('chalk'),
-  urls: require('./urls.js'),
-  request: require('request'),
-  sequelize: require('sequelize'), 
-  pg: require('pg'),
-  dbAuth: require('./dbAuth.js'),
-  bcrypt: require('bcrypt')
+  request: require('request')//,
+  // sequelize: require('sequelize'), 
+  // pg: require('pg'),
+  // dbAuth: require('./dbAuth.js'),
 }
