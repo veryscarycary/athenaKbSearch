@@ -1,3 +1,4 @@
+'use strict'
 const DIALECT = 'mongodb';//'postgres';
 const HOST = 'localhost';
 // const PORT = 5432;

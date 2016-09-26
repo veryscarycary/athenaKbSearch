@@ -1,16 +1,25 @@
 'use strict'
-/*************************
-        KB SCHEMA
-*************************/
+const mw = require('../config/middleware.js');
+const mongoose = mw.mongoose;
 
-const mongoose = require('../config/middleware.js').mongoose;
-
-var schema = new mongoose.Schema({
-  title: {
-    type:String,
-    unique: true
-  }
-},
-{ versionKey: false });
-
-module.exports = mongoose.model('Kb', schema);
+module.exports = mongoose.model('Kb', new mongoose.Schema(
+    {
+      id: Number,
+      title: {
+        type:String,
+        unique: true
+      },
+      issuePreview: String, 
+      issue: String,
+      solution: String,
+      relatedTickets: [String],
+      relatedProducts: Object, //keys are products, values are versions
+      authorId: String,
+      archived: Boolean,
+      dateLastEdited: String,
+      dateSubmittedOn: String,
+      dateLastViewed: String,
+      viewCount: Number
+    },
+    {  versionKey: false }
+));

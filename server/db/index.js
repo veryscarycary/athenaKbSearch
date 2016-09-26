@@ -3,7 +3,7 @@ const mw = require('../config/middleware.js');
 const uri = mw.urls.database;
 const chalk = mw.chalk;
 
-let db = mw.mongoose.connect(uri).connection
+module.exports = mw.mongoose.connect(uri).connection
   .on('error', err => console.log(err))
   .on('open', () => {
     console.log(
@@ -22,5 +22,3 @@ let db = mw.mongoose.connect(uri).connection
           );
       }));
   });
-
-  module.exports = db;
