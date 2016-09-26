@@ -1,3 +1,4 @@
+'use strict'
 //to use, duplicate this file without the '.example' then fill out the database password in the new file you just created. 
 
 //example:
