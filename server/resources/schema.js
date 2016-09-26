@@ -1,6 +1,5 @@
 'use strict'
-const mw = require('../config/middleware.js');
-const mongoose = mw.mongoose;
+const mongoose = require('../config/middleware.js').mongoose;
 
 module.exports = mongoose.model('Kb', new mongoose.Schema(
     {
@@ -15,7 +14,7 @@ module.exports = mongoose.model('Kb', new mongoose.Schema(
       relatedProducts: Object, //keys are products, values are versions
       authorId: String,
       archived: Boolean,
-      datesEdited: [[Date, String]],
+      datesEdited: [[Date, String]], //dates edited, user Id
       dateSubmitted: Date,
       dateLastViewed: Date,
       viewCount: Number, 
