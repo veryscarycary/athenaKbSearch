@@ -4,7 +4,6 @@ const mongoose = mw.mongoose;
 
 module.exports = mongoose.model('Kb', new mongoose.Schema(
     {
-      id: Number,
       title: {
         type:String,
         unique: true
@@ -16,10 +15,11 @@ module.exports = mongoose.model('Kb', new mongoose.Schema(
       relatedProducts: Object, //keys are products, values are versions
       authorId: String,
       archived: Boolean,
-      dateLastEdited: String,
-      dateSubmittedOn: String,
-      dateLastViewed: String,
-      viewCount: Number
+      datesEdited: [[Date, String]],
+      dateSubmitted: Date,
+      dateLastViewed: Date,
+      viewCount: Number, 
+      checkedOut: Boolean
     },
     {  versionKey: false }
 ));
