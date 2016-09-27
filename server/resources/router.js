@@ -2,16 +2,12 @@
 const router = require('../config/middleware.js').router();
 const api = require('./controller.js');
 
-// router.get('/api/:id/stub', api.getStubs); //return stubs. this will be how the kb search service updates
+router.get('/api', api.getStubs); //get all stubs
+router.get('/api/:id', api.getStubs); //get a single stub
 
-router.route('/api')
-  .get(api.getArticle)
-  .post(api.createArticle);
+router.get('/update', api.updateFromMaster); //update collection from master
 
-router.route('/api/:id')
-  .get(api.getArticle)
-  .put(api.editArticle)
-  .delete(api.deleteArticle);
+router.get('/refresh', api.refreshFromMaster); //drop collection and query a new one from master
 
 router.get('/', api.pingDb)
 

@@ -7,6 +7,7 @@ module.exports = {
   express: require('express'),
   router: require('express').Router,
   mongoose: mongoose,
+  mongodb: require('mongodb'),
   bodyParser: require('body-parser'),
   chalk: require('chalk'),
   request: require('request')//,
