@@ -7,7 +7,7 @@ module.exports = mongoose.model('Kb', new mongoose.Schema(
         type:String,
         unique: true
       },
-      issuePreview: String, 
+      issuePreview: String,
       relatedProducts: Object, //keys are products, values are versions
       authorId: String,
       archived: Boolean,
