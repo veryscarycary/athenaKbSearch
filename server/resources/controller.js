@@ -2,89 +2,92 @@
 const mw = require('../config/middleware.js');
 const request = mw.request;
 const url = mw.urls.database;
-//const KbStub = require('./schema.js');
 const client = require('../elasticsearch.js');
 
 module.exports = {
-  pingDb (req, res) {
-    require('../db/index.js').readyState ?
-      res.status(200).send(JSON.stringify('db connected'))
-      : res.status(503).send(JSON.stringify({name: 'MONGO_CONN_FAIL', message: 'bad MongoDB connection'}
-      ));
+  pingEs: (req, res) => {
+    client.ping({
+      requestTimeout: 3000,
+    }, err => err ?
+      console.error('elasticsearch server stopped: ', err)
+        : console.log('elasticsearch client listening at 9200'))
   },
-  getStubs(req, res) {
-    let id = req.params.id;
-    KbStub.find(id ? {_id: req.params.id} : {},
-      (err, data) => err ?
-        res.status(404).send(err)
-        : res.status(200).send(JSON.stringify(data))
-    );
+  addIndex: (req, res) => {
+    mw.mongodb.MongoClient.connect(mw.urls.masterDatabase, (err, db) => {
+      if (err) { res.status(503).send(err); }
+      db.collection('kbs').find().toArray((err, docs) => {
+        console.log(docs);
+        if (err) { res.status(404).send(err); }
+        client.bulk({body: indexArticles(docs)}, (err) => {
+          if (err) { res.status(404).send(err); }
+          res.status(200).send('successfully indexed the articles');
+        })
+      })
+    })
   },
-  //updateFromMaster(req, res) {
-    //mw.mongodb.MongoClient.connect(mw.urls.masterDatabase, (err, db) => err ?
-      //res.status(503).send(err)
-      //: db.collection('kbs').find().toArray((err, kbs) => err ?
-        //res.status(404).send(err)
-          //: () => {
-            //console.log('called');
-            //client.delete({
-              //index: 'kb'
-            //}, (err, response) => err ?
-                //console.error('error removing kb: ',err)
-                //: console.log('indices successfully cleared')
-            //);
-            //kbs.map(function(item, index) {
-              //// right now, this only checks for new entries, does NOT update existing ones
-              //console.log(item);
-              //client.create({
-                //index: 'kb',
-                //type: 'article',
-                //id: item._id,
-                //body: {
-                  //title: item.title,
-                  //id: item.id,
-                  //issuePreview: item.issuePreview,
-                  //issue: item.issue,
-                  //solution: item.solution,
-                //}
-              //}, (err, response) => err ?
-                  //console.error('error adding document: ', err)
-                  //: console.log('document successfully created')
-              //);
-            //});
-          //}
-        //: KbStub.remove({}, err => err ?
-          //res.status(500).send(err)
-          //: (() => {
-            //let doneCount = 0, length = kbs.length, errors = [];
-            //while(kbs.length > 0) {
-              //let entry = kbs.pop();
-              //new KbStub({
-                //_id: entry._id,
-                //title: entry.title,
-                //issuePreview: entry.issuePreview,
-                //relatedProducts: entry.relatedPorducts,
-                //authorId: entry.authorId,
-                //archived: entry.archived,
-                //datesEdited: entry.datesEdited,
-                //dateSubmitted: entry.dateSubmitted,
-                //dateLastViewed: entry.dateLastViewed,
-                //viewCount: entry.viewCount
-              //})
-              //.save(err => err ?
-                //doneCount++ && errors.push(err)
-                //: ++doneCount === length &&
-                  //res.status(200).send(JSON.stringify(
-                    //`${doneCount - errors.length} complete. ${errors.length} errors: ${errors}`
-                  //))
-              //);
-            //}
-          //})()
-        //)
-      //)
-    //);
-  //},
-  refreshFromMaster(req, res) {
-
+  searchTerm: (req, res) => {
+    client.search({
+      index: 'kb',
+//      type: 'articles',
+//      field: ['issue', 'issuePreview', 'solution'],
+      q: 'adipisicing',
+//      must: [{
+        dateLastViewed: {
+          gte: "2015-04-23T04:53:40.000Z"
+        }
+//      }]
+    }, (err, resp) => {
+      if (err) {console.log('error searching')}
+      res.status(200).send(resp);
+    })
   }
-};
+}
+
+var indexArticles = (arr) => {
+  var bulkEdits = [];
+  arr.map((item, i) => {
+    if (i < 10) {
+      var doc = {
+        issuePreview: item.issuePreview,
+        issue: item.issue,
+        solution: item.solution,
+        lastEdited: new Date(item.datesEdited[item.datesEdited.length-1][0]),
+        dateSubmitted: new Date(item.dateSubmitted),
+        viewCount: item.viewCount,
+        archived: item.archived,
+        relatedProducts: item.relatedProducts[0],
+        dateLastViewed: new Date(item.dateLastViewed)
+      }
+      var header = {index: {_index:'kb', _type:'article'}};
+      bulkEdits.push(header, doc);
+    }
+  });
+  return bulkEdits;
+}
+
+
+var countAllDocuments = () => {
+  client.count((err, response, status) => {
+    if (err) { console.log(err) }
+    console.log('there are ', response.count, ' shards in this cluster.');
+  })
+}
+
+var clearAllDocuments = () => {
+  client.indices.delete({
+    index: '*',
+  }, (err, resp) => err ?
+    console.log('error deleting indices, ', err)
+    : console.log('deleted all instances of from elasticsearch'))
+}
+
+var getMappingOfIndex = (index) => {
+  client.indices.getMapping({
+    index: index,
+  }, (err, resp) => err ?
+    console.log('error getting mapping of indices, ', err)
+    : console.log('mapping of documents in ', index, ' : ', resp));
+}
+
+//clearAllDocuments();
+//getMappingOfIndex('kb');

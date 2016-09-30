@@ -1,6 +1,6 @@
-'use strict' 
+'use strict'
 const mw = require('./config/middleware.js');
-require('./db/index.js');
+//require('./db/index.js');
 const app = mw.express();
 
 //middleware and routes
