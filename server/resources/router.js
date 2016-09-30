@@ -11,6 +11,7 @@ const api = require('./controller.js');
 
 router.get('/', api.pingEs);
 router.get('/addIndex', api.addIndex);
-router.get('/search', api.searchTerm);
+router.get('/findMostRecent', api.findMostRecent);
+//router.get('/findRecent', api.findRecent);
 
 module.exports = router;
