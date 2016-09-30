@@ -16,7 +16,6 @@ module.exports = {
     mw.mongodb.MongoClient.connect(mw.urls.masterDatabase, (err, db) => {
       if (err) { res.status(503).send(err); }
       db.collection('kbs').find().toArray((err, docs) => {
-        console.log(docs);
         if (err) { res.status(404).send(err); }
         client.bulk({body: indexArticles(docs)}, (err) => {
           if (err) { res.status(404).send(err); }
@@ -28,14 +27,10 @@ module.exports = {
   searchTerm: (req, res) => {
     client.search({
       index: 'kb',
-//      type: 'articles',
-//      field: ['issue', 'issuePreview', 'solution'],
-      q: 'adipisicing',
-//      must: [{
-        dateLastViewed: {
-          gte: "2015-04-23T04:53:40.000Z"
+      body: {
+        query: {
         }
-//      }]
+      }
     }, (err, resp) => {
       if (err) {console.log('error searching')}
       res.status(200).send(resp);
@@ -89,5 +84,39 @@ var getMappingOfIndex = (index) => {
     : console.log('mapping of documents in ', index, ' : ', resp));
 }
 
+var findNewPosts = () => {
+  var date;
+  client.search({
+    _index: 'kb',
+    body: {
+//      query: {
+        sort: [
+          { lastEdited: {order:"desc"} }
+        ]
+      }
+//    }
+  }, (err, res) => {
+    if (err) { console.log(err) };
+    date = res.hits.hits[0]._source.lastEdited;
+    //TODO: USE DATE TO DO MONGO REQ FOR ALL THINGS UPDATED OR CREATED BETWEEN THEN AND CURRENT TIME
+  })
+  /*
+  mw.mongodb.MongoClient.connect(mw.urls.masterDatabase, (err, db) => {
+    if (err) { console.log('there was an error') }
+    db.Collection.find({
+      created_at : {
+        '$gte': date,
+      }
+    }, (err, docs) => err ?
+      console.log(there was an error);
+      : res.status)
+  })
+ */
+}
+
 //clearAllDocuments();
 //getMappingOfIndex('kb');
+//
+
+//clearAllDocuments();
+findNewPosts();
