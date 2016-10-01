@@ -12,6 +12,8 @@ const api = require('./controller.js');
 router.get('/', api.pingEs);
 router.get('/addIndex', api.addIndex);
 router.get('/findMostRecent', api.findMostRecent);
+router.get('/delete', api.deleteAllRecords);
+router.get('/count', api.count);
 //router.get('/findRecent', api.findRecent);
 
 module.exports = router;
