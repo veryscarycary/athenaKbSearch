@@ -10,10 +10,8 @@ module.exports = {
   },
 
   addIndex: (req, res) => {
-    mw.mongodb.MongoClient.connect(mw.urls.masterDatabase, (err, db) => {
-      if (err) { res.status(503).send(err); }
-      db.collection('kbs').find().toArray((err, docs) => {
-        if (err) { res.status(404).send(err); }
+    utils.getAllFromDb()
+      .then(docs => {
         utils.bulkAdd(docs)
           .then(resp => {
             res.status(200).send(resp);
@@ -23,14 +21,16 @@ module.exports = {
             res.status(503).send(err);
           })
       })
-    })
   },
 
   findMostRecent: (req, res) => {
-    var date = utils.getLatestDate().then((err, resp) => {
-      if (err) { res.status(404).send(err) }
-      res.status(200).send(resp);
-    })
+    var date = utils.getLatestDate()
+      .then(resp => {
+        res.status(200).send(resp);
+      })
+      .catch(err => {
+        if (err) { res.status(404).send(err) }
+      })
   },
 
   deleteAllRecords: (req, res) => {
