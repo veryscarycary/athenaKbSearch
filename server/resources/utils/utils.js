@@ -11,8 +11,9 @@ module.exports = {
   },
 
   bulkAdd: (arr) => {
-    formatArticlesForBulkAdd(arr)
-      then(bulk => {
+    return formatArticlesForBulkAdd(arr)
+      .then(bulk => {
+        console.log(bulk);
         return client.bulk({body: bulk});
       })
   },
@@ -83,40 +84,89 @@ module.exports = {
       })
     })
   },
+
+  basicSearch: (options) => {
+    var primaryTermSearch = {
+      multi_match: {
+        query: options.term,
+        fields: ['title', 'issuePreview'],
+        boost: 3
+      }
+    }
+    var secondaryTermSearch = {
+      mutli_match: {
+        query: options.term,
+        fields: ['issue', 'solution']
+      }
+    }
+    var archived = {archived: false};
+    var should = [primaryTermSearch];
+    if (!options.archived) {
+      should.push(archived);
+    }
+
+    return client.search({
+      _index: 'kb',
+      body: {
+        query: {
+          function_score: {
+            query: {
+              bool: {
+                should: should
+              },
+              field_value_factor: {
+                fields: ['viewCount', 'lastEdited', 'dateLastViewed'],
+                modifier: 'log1p'
+              },
+              size: 10,
+            }
+          }
+        }
+      }
+    })
+  }
 }
 
 const formatArticlesForBulkAdd = arr => {
-  var bulkAdds = [];
-  Promise.all(arr.map((item, i) => {
-    return new Promise((resolve, reject) => {
-      var doc, header;
-      if (i < 3) {
-        doc = {
-          id: item.id,
-          issuePreview: item.issuePreview,
-          issue: item.issue,
-          solution: item.solution,
-          lastEdited: new Date(item.datesEdited[item.datesEdited.length-1][0]),
-          dateSubmitted: new Date(item.dateSubmitted),
-          viewCount: item.viewCount,
-          archived: item.archived,
-          relatedProducts: item.relatedProducts[0],
-          dateLastViewed: new Date(item.dateLastViewed)
-        }
-        header = {index: { _index: 'kb', _type: 'article', _id: item.id }};
-        resolve([header, doc]);
-      }
-    })
+  return Promise.all(arr.map((item, i) => {
+      return checkExists(item.id)
+        .then(resp => {
+          var doc, header, action;
+          action = resp.exists ? 'update' : 'index';
+          doc = {};
+          doc.id = item.id,
+          doc.issuePreview= item.issuePreview,
+          doc.issue= item.issue,
+          doc.solution= item.solution,
+          doc.lastEdited= new Date(item.datesEdited[item.datesEdited.length-1][0]),
+          doc.dateSubmitted= new Date(item.dateSubmitted),
+          doc.viewCount= item.viewCount,
+          doc.archived= item.archived,
+          doc.relatedProducts= item.relatedProducts[0],
+          doc.dateLastViewed= new Date(item.dateLastViewed)
+          if (resp.exists) {
+            doc = {doc: doc};
+          }
+          header = {[action]: { _index: 'kb', _type: 'article', _id: item.id }};
+          return [header, doc];
+        })
   }))
     .then(arr => {
-      console.log('xxxx \n xxxx \n xxxx \n xxxx \n',arr);
-    });
-  return bulkAdds;
+      return new Promise((resolve, reject) => {
+        var bulkAdds = []
+        arr.map(item => {
+          bulkAdds.push(item[0], item[1]);
+        })
+        resolve(bulkAdds);
+      })
+    })
 };
 
 const checkExists = (id) => {
   return client.searchExists({
     _index: 'kb',
-    _id: id
+    ignore: 404,
+    ignoreUnavailable: true,
+    q: id
   })
 };

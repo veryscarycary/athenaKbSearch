@@ -50,5 +50,16 @@ module.exports = {
       .catch(err => {
         res.status(404).send(err);
       });
+  },
+  search: (req, res) => {
+    var options = req.body.options;
+    console.log(options);
+    utils.basicSearch(options)
+      .then(result => {
+        req.send(200).send(resp);
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
   }
 }
