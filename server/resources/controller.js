@@ -2,7 +2,7 @@
 const mw = require('../config/middleware');
 const request = mw.request;
 const url = mw.urls.database;
-const utils = require('./utils');
+const utils = require('./utils/utils');
 
 module.exports = {
   pingEs: (req, res) => {
