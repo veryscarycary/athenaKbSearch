@@ -1,4 +1,3 @@
-'use strict'
 const mw = require('../config/middleware');
 const request = mw.request;
 const url = mw.urls.database;
@@ -33,6 +32,16 @@ module.exports = {
       })
   },
 
+  mapping: (req, res) => {
+    utils.getMappingOfIndex('kb')
+      .then(resp => {
+        res.status(200).send(resp)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
   deleteAllRecords: (req, res) => {
     utils.clearAllDocuments()
       .then(resp => {
@@ -52,11 +61,18 @@ module.exports = {
       });
   },
   search: (req, res) => {
-    var options = req.body.options;
-    console.log(options);
+    console.log('HERE IS THE QUERY',req.query);
+    var options = {
+      term: req.query.term,
+      archived: req.query.archived,
+      product: req.query.product,
+      dateStart: req.query.dateStart,
+      dateEnd: req.query.dateEnd,
+      tickedId: req.query.ticketId,
+    }
     utils.basicSearch(options)
       .then(result => {
-        req.send(200).send(resp);
+        res.status(200).send(result.hits.hits);
       })
       .catch(err => {
         res.status(404).send(err);

@@ -12,10 +12,10 @@ module.exports = {
 
   bulkAdd: (arr) => {
     return formatArticlesForBulkAdd(arr)
-      .then(bulk => {
-        console.log(bulk);
-        return client.bulk({body: bulk});
-      })
+    .then(bulk => {
+      console.log(bulk);
+      return client.bulk({body: bulk});
+    })
   },
 
   countAllDocuments: () => {
@@ -29,11 +29,9 @@ module.exports = {
   },
 
   getMappingOfIndex: (index) => {
-    client.indices.getMapping({
+    return client.indices.getMapping({
       index: index,
-    }, (err, resp) => err
-      ? console.log('error getting mapping of indices, ', err)
-      : console.log('mapping of documents in ', index, ' : ', resp));
+    });
   },
 
   getLatestDate: () => {
@@ -86,71 +84,121 @@ module.exports = {
   },
 
   basicSearch: (options) => {
-    var primaryTermSearch = {
-      multi_match: {
-        query: options.term,
-        fields: ['title', 'issuePreview'],
-        boost: 3
+    // SEARCH OBJECT
+    // {
+    //  options: {
+    //    archived: bool, // required
+    //    term: str, // required
+    //    product: product,
+    //    ticket: ticketID,
+    //    range: {
+    //      startDate: ISOstr,
+    //      endDate: ISOstr
+    //    }
+    //  }
+    // }
+    //
+    var product = {
+      term: {relatedProducts: options.product},
+    };
+    var ticket = {
+      term: {tickets: options.ticketId},
+    };
+    var range = {
+      dateSubmitted: {
+        gte: options.startDate ? options.startDate : "",
+        lte: options.endDate ? options.endDate : new Date(),
       }
+    };
+
+    var must = [];
+    if (options.product) {
+      must.push(product);
     }
-    var secondaryTermSearch = {
-      mutli_match: {
-        query: options.term,
-        fields: ['issue', 'solution']
-      }
+    if (options.ticket) {
+      must.push(ticket);
     }
-    var archived = {archived: false};
-    var should = [primaryTermSearch];
-    if (!options.archived) {
-      should.push(archived);
+    if (options.range) {
+      must.push(range);
     }
 
     return client.search({
-      _index: 'kb',
-      body: {
-        query: {
-          function_score: {
-            query: {
-              bool: {
-                should: should
+        _index: 'kb',
+        body: {
+          fields: [
+            '_source',
+          ],
+          query: {
+            function_score: {
+              query: {
+                bool: {
+                  filter: {
+                    term: {archived: options.archived}
+                  },
+                  should: [
+                    {
+                      multi_match: {
+                        query: options.term,
+                        fields: ['title^3','issuePreview^3', 'issue', 'solution'],
+                      }
+                    }
+                  ],
+                }
               },
-              field_value_factor: {
-                fields: ['viewCount', 'lastEdited', 'dateLastViewed'],
-                modifier: 'log1p'
-              },
-              size: 10,
+              functions: [
+                {
+                  field_value_factor: {
+                    field: 'viewCount',
+                    modifier: 'log1p',
+                    factor: 3,
+                  }
+                },
+                {
+                  field_value_factor: {
+                    field: 'dateSubmitted',
+                    modifier: 'log1p',
+                  }
+                },
+                {
+                  field_value_factor: {
+                    field: 'lastEdited',
+                    modifier: 'log1p',
+                  }
+                }
+              ]
             }
           }
         }
-      }
     })
   }
-}
+};
 
-const formatArticlesForBulkAdd = arr => {
-  return Promise.all(arr.map((item, i) => {
+  const formatArticlesForBulkAdd = arr => {
+    return Promise.all(arr.map((item, i) => {
       return checkExists(item.id)
-        .then(resp => {
-          var doc, header, action;
-          action = resp.exists ? 'update' : 'index';
-          doc = {};
-          doc.id = item.id,
-          doc.issuePreview= item.issuePreview,
-          doc.issue= item.issue,
-          doc.solution= item.solution,
-          doc.lastEdited= new Date(item.datesEdited[item.datesEdited.length-1][0]),
-          doc.dateSubmitted= new Date(item.dateSubmitted),
-          doc.viewCount= item.viewCount,
-          doc.archived= item.archived,
-          doc.relatedProducts= item.relatedProducts[0],
-          doc.dateLastViewed= new Date(item.dateLastViewed)
-          if (resp.exists) {
-            doc = {doc: doc};
-          }
-          header = {[action]: { _index: 'kb', _type: 'article', _id: item.id }};
-          return [header, doc];
-        })
-  }))
+      .then(resp => {
+        var doc, header, action;
+        action = resp.exists ? 'update' : 'index';
+        doc = {};
+        doc.id = item.id;
+        doc.issuePreview= item.issuePreview;
+        doc.title=item.title;
+        doc.issue= item.issue;
+        doc.solution= item.solution;
+        doc.lastEdited= new Date(item.datesEdited[item.datesEdited.length-1][0]);
+        doc.dateSubmitted= new Date(item.dateSubmitted);
+        doc.viewCount= item.viewCount;
+        doc.archived= item.archived;
+        doc.relatedProducts= item.relatedProducts[0];
+        doc.dateLastViewed= new Date(item.dateLastViewed);
+        doc.tickets= item.relatedTickets;
+        if (resp.exists) {
+          doc = {doc: doc};
+        }
+        header = {[action]: { _index: 'kb', _type: 'article', _id: item.id }};
+        return [header, doc];
+      })
+    }))
     .then(arr => {
       return new Promise((resolve, reject) => {
         var bulkAdds = []
@@ -160,13 +208,14 @@ const formatArticlesForBulkAdd = arr => {
         resolve(bulkAdds);
       })
     })
-};
+  };
 
-const checkExists = (id) => {
-  return client.searchExists({
-    _index: 'kb',
-    ignore: 404,
-    ignoreUnavailable: true,
-    q: id
-  })
-};
+  const checkExists = (id) => {
+    return client.searchExists({
+      _index: 'kb',
+      ignore: 404,
+      ignoreUnavailable: true,
+      q: id
+    })
+  };
+

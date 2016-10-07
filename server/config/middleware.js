@@ -11,7 +11,7 @@ module.exports = {
   bodyParser: require('body-parser'),
   chalk: require('chalk'),
   request: require('request')//,
-  // sequelize: require('sequelize'), 
+  // sequelize: require('sequelize'),
   // pg: require('pg'),
   // dbAuth: require('./dbAuth.js'),
 }
