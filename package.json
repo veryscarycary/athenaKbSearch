@@ -4,7 +4,8 @@
   "description": "Knowledge Base Article Query Server for Athena",
   "main": "./server/index.js",
   "scripts": {
-    "start": "nodemon server/index.js $PORT"
+    "start": "nodemon server/index.js $PORT",
+    "worker": "node ./server/resources/utils/updates.js"
   },
   "repository": {
     "type": "git",
