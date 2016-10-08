@@ -8,8 +8,10 @@ const api = require('./controller.js');
 //router.get('/update', api.updateFromMaster); //update collection from master
 
 //router.get('/refresh', api.refreshFromMaster); //drop collection and query a new one from master
-///router.get('/', api.pingEs);
-router.get('/', api.addIndex);
-//router.get('/', api.searchTerm);
+
+router.get('/', api.pingEs);
+router.get('/addIndex', api.addIndex);
+router.get('/findMostRecent', api.findMostRecent);
+//router.get('/findRecent', api.findRecent);
 
 module.exports = router;
