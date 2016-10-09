@@ -89,8 +89,11 @@ module.exports = {
       dateEnd: req.query.dateEnd,
       tickedId: req.query.ticketId,
     }
+    console.log('THis is the term: ', req.query.term);
+    console.log('these are the options: ', options);
     utils.basicSearch(options)
       .then(result => {
+        console.log(result)
         res.status(200).send(result.hits.hits);
       })
       .catch(err => {

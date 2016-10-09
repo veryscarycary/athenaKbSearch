@@ -57,7 +57,6 @@ module.exports = {
         }
       }, (err, res) => {
         if (err) { reject(err) };
-        console.log(res);
         date = res.hits.hits[0]._source.lastEdited;
       })
       client.search({
@@ -123,7 +122,8 @@ module.exports = {
     }
     if (options.type === 'kb') {
       return client.search({
-        _index: 'kb',
+        index: 'kb',
+        type: 'article',
         body: {
           fields: [
             '_source',
@@ -172,15 +172,15 @@ module.exports = {
       })
     } else {
       return client.search({
-        _index: 'ticket',
-        _type: 'ticket',
+        index: 'ticket',
+        type: 'ticket',
         body: {
           fields: [
             '_source',
           ],
-          query: {
+//          query: {
 //            function_score: {
-//              query: {
+              query: {
                 bool: {
                   should: [
                     {
@@ -192,7 +192,7 @@ module.exports = {
                   ],
                 }
               },
-              //functions: [
+//              functions: [
                 //{
                   //field_value_factor: {
                     //field: 'viewCount',
@@ -200,19 +200,19 @@ module.exports = {
                     //factor: 3,
                   //}
                 //},
-                //{
-                  //field_value_factor: {
-                    //field: 'dateSubmitted',
-                    //modifier: 'log1p',
-                  //}
-                //},
-                //{
-                  //field_value_factor: {
-                    //field: 'lastEdited',
-                    //modifier: 'log1p',
-                  //}
-                //}
-              //]
+//                {
+//                  field_value_factor: {
+//                    field: 'dateSubmitted',
+//                    modifier: 'log1p',
+//                  }
+//                },
+//                {
+//                  field_value_factor: {
+//                    field: 'lastEdited',
+//                    modifier: 'log1p',
+//                  }
+//                }
+//              ]
 //            }
 //          }
         }
@@ -247,6 +247,8 @@ const formatArticlesForBulkAdd = (arr, type) => {
         doc.resolved = item.resolved;
         doc.relatedArticles = item.relatedArticles;
         doc.solution = item.solution || '';
+        doc.dateLastViewed= item.dateSubmitted ? new Date(item.dateSubmitted) : new Date('March 18, 2016');
+        doc.lastEdited= item.datesEdited ? new Date(item.datesEdited[item.datesEdited.length-1][0]) : new Date('March 18, 2016');
         //doc.dateSubmitted = new Date(item.dateSubmitted || 'March 18 2016');
         //doc.lastEdited = new Date(item.dateSubmitted || 'March 18 2016');
       }
