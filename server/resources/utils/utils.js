@@ -57,10 +57,11 @@ module.exports = {
         }
       }, (err, res) => {
         if (err) { reject(err) };
+        console.log(res);
         date = res.hits.hits[0]._source.lastEdited;
       })
       client.search({
-        _index: 'kb',
+        _index: type,
         body: {
           sort: [
             { dateSubmitted: {order: "desc"} },
@@ -68,6 +69,7 @@ module.exports = {
         }
       }, (err, res) => {
         if (err) { reject(err) };
+        console.log(res);
         var compare = res.hits.hits[0]._source.dateSubmitted;
         date = date > compare ? date : compare;
         resolve(date);
