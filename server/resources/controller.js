@@ -17,15 +17,38 @@ module.exports = {
       })
   },
 
+  testPostgres: (req, res) => {
+    utils.testPostgres()
+      .then(docs => {
+        res.status(200).send(docs)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
+  getAllRecords: (req,res) => {
+    utils.getAllRecords(req.params.type)
+      .then(docs => {
+        res.status(200).send(docs)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
   addIndex: (req, res) => {
     var type = req.query.type
-    utils.getAllFromDb({}, type)
+    utils.getAllFromDb(null, type)
       .then(docs => {
+        console.log('I AM DOCS', docs);
         utils.bulkAdd(docs, type)
           .then(resp => {
+            console.log('resp',resp);
             res.status(200).send(resp);
           })
           .catch(err => {
+            console.log(err);
             res.status(503).send(err);
           })
       })

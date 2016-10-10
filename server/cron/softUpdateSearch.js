@@ -12,7 +12,9 @@ const softUpdate = new CronJob('0 */5 * * * *', () => {
       utils.getAllFromDb({dateLastEdited: {$gte: date}}, 'kb')
       .then(updatedDocs => {
         var allDocs = newDocs.concat(updatedDocs);
-        utils.bulkAdd(allDocs, 'kb')
+        if (allDocs) {
+          utils.bulkAdd(allDocs, 'kb')
+        };
       })
     })
   })

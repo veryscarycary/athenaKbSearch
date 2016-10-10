@@ -40,10 +40,18 @@ module.exports = () => {
             relatedArticles: {
               type: 'string'
             },
+            createdAt: {
+              type: 'date',
+              format: 'strict_date_optional_time||epoch_millis',
+            },
+            updatedAt: {
+              type: 'date',
+              format: 'strict_date_optional_time||epoch_millis',
+            },
           }
         }
       })
-      .then(() => utils.getAllFromDb({}, 'ticket'))
+      .then(() => utils.getAllFromDb(null, 'ticket'))
         .then(docs => utils.bulkAdd(docs, 'ticket'))
           .then(() => console.log('Ticket initialized successfully!'))
     })

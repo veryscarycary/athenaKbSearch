@@ -11,4 +11,6 @@ router.get('/api/search', api.search);
 router.get('/api/searchAll', api.searchAll);
 router.get('/api/mapping', api.mapping);
 router.get('/api/checkIndexExists', api.checkIndexExists);
+router.get('/api/testPostgres', api.testPostgres);
+router.get('/api/getAllRecords', api.getAllRecords);
 module.exports = router;

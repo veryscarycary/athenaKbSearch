@@ -19,7 +19,7 @@ module.exports = () => {
         body: {
           properties: {
             id: {
-              type: 'string',
+              type: 'long',
             },
             issue: {
               type: 'string',
@@ -33,7 +33,7 @@ module.exports = () => {
             solution: {
               type: 'string',
             },
-            lastEdited: {
+            updatedAt: {
               type: 'date',
               format: 'strict_date_optional_time||epoch_millis',
             },
@@ -41,18 +41,12 @@ module.exports = () => {
               type: 'date',
               format: 'strict_date_optional_time||epoch_millis',
             },
-            dateSubmitted: {
+            createdAt: {
               type: 'date',
               format: 'strict_date_optional_time||epoch_millis',
             },
-            tickets: {
-              type: 'string',
-            },
             archived: {
               type: 'boolean',
-            },
-            products: {
-              type: 'string',
             },
             viewCount: {
               type: 'long',
@@ -60,7 +54,7 @@ module.exports = () => {
           }
         }
       })
-      .then(() => utils.getAllFromDb({}, 'kb'))
+      .then(() => utils.getAllFromDb(null, 'kb'))
         .then(docs => utils.bulkAdd(docs, 'kb'))
           .then(() => console.log('KB initialized successfully!'))
     })

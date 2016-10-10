@@ -1,5 +1,10 @@
 const client = require('../../elasticsearch');
 const mw = require('../../config/middleware');
+const kbDb = require('../../config/urls').kb.database;
+const Sequelize = require('sequelize');
+const kbSequelize = new Sequelize(kbDb);
+const ticketDb = require('../../config/urls').ticket.masterDatabase;
+
 
 module.exports = {
   ping: () => {
@@ -8,6 +13,10 @@ module.exports = {
     }, err => err
       ? console.error('elasticsearch server stopped: ', err)
       : console.log('elasticsearch client listening at 9200'))
+  },
+
+  testPostgres: () => {
+    return kbSequelize.query('SELECT * from articles', {type: Sequelize.QueryTypes.select})
   },
 
   bulkAdd: (arr, type) => {
@@ -29,7 +38,7 @@ module.exports = {
 
   countAllDocuments: (type) => {
     return client.count({
-      _index: type || '*',
+      index: type || '*',
     });
   },
 
@@ -57,7 +66,8 @@ module.exports = {
         }
       }, (err, res) => {
         if (err) { reject(err) };
-        date = res.hits.hits[0]._source.lastEdited;
+        console.log(res);
+        date = res.hits.hits[0]._source.updatedAt;
       })
       client.search({
         _index: type,
@@ -68,33 +78,59 @@ module.exports = {
         }
       }, (err, res) => {
         if (err) { reject(err) };
-        console.log(res);
-        var compare = res.hits.hits[0]._source.dateSubmitted;
+        var compare = res.hits.hits[0]._source.createdAt;
         date = date > compare ? date : compare;
         resolve(date);
       })
     })
   },
 
-  getAllFromDb: (options, type) => {
-    return new Promise((resolve, reject) => {
+  getAllRecords: (type) => {
+    return client.search({
+      index: type,
+//      type: 'article',
+      size: 10,
+      body: {
+        query: {
+          match_all: {},
+        }
+      }
+    })
+  },
+
+  getAllFromDb: (query, type) => {
+    if (type === 'kb') {
+      return new Promise((resolve, reject) => {
+        if (!query) {
+          console.log('I\'m in, query: ', query, ' type:  ', type);
+          return kbSequelize.query('SELECT * from articles')
+            .then(docs => resolve(docs));
+        } else {
+          return kbSequelize.query(query, {type: sequelize.QueryTypes.select})
+            .then(docs => resolve(docs));
+        }
+      })
+      .catch(err => reject(err));
+    } else {
+     return new Promise((resolve, reject) => {
       mw.mongodb.MongoClient.connect(mw.urls[type].masterDatabase, (err, db) => {
         if (err) { reject(err); }
-        var collection = type === 'kb' ? 'kbs' : 'tickets';
-        if (!options) {
+        var collection = 'tickets';
+        if (!query) {
           db.collection(collection).find().toArray((err, docs) => {
             if (err) { reject(err); }
             resolve(docs);
           })
         } else {
-          db.collection(collection).find(options).toArray((err, docs) => {
+          db.collection(collection).find(query).toArray((err, docs) => {
             if (err) { reject(err); }
             resolve(docs);
           })
         }
       })
-    })
-  },
+    });
+  }
+},
 
   basicSearch: (options) => {
     var product = {
@@ -133,7 +169,7 @@ module.exports = {
               query: {
                 bool: {
                   filter: {
-                    term: {archived: options.archived}
+                    term: {archived: options.archived ? options.archived : false}
                   },
                   should: [
                     {
@@ -155,13 +191,13 @@ module.exports = {
                 },
                 {
                   field_value_factor: {
-                    field: 'dateSubmitted',
+                    field: 'createdAt',
                     modifier: 'log1p',
                   }
                 },
                 {
                   field_value_factor: {
-                    field: 'lastEdited',
+                    field: 'updatedAt',
                     modifier: 'log1p',
                   }
                 }
@@ -222,7 +258,8 @@ module.exports = {
 };
 
 const formatArticlesForBulkAdd = (arr, type) => {
-  return Promise.all(arr.map((item, i) => {
+  var docs = type === 'kb' ? arr[0] : arr;
+  return Promise.all(docs.map((item, i) => {
     return checkDocExists(item.id, type)
     .then(resp => {
       var doc, header, action;
@@ -234,21 +271,19 @@ const formatArticlesForBulkAdd = (arr, type) => {
         doc.issuePreview= item.issuePreview;
         doc.title=item.title;
         doc.solution= item.solution;
-        doc.lastEdited= new Date(item.datesEdited[item.datesEdited.length-1][0]);
-        doc.dateSubmitted= new Date(item.dateSubmitted);
+        doc.updatedAt= new Date(item.updatedAt);
+        doc.createdAt= new Date(item.createdAt);
         doc.viewCount= item.viewCount;
         doc.archived= item.archived;
-        doc.products= item.relatedProducts[0];
         doc.dateLastViewed= new Date(item.dateLastViewed);
-        doc.tickets= item.relatedTickets;
       } else if (type === 'ticket') {
         doc.product = item.product;
         doc.customerId = item.customerId;
         doc.resolved = item.resolved;
         doc.relatedArticles = item.relatedArticles;
         doc.solution = item.solution || '';
-        doc.dateLastViewed= item.dateSubmitted ? new Date(item.dateSubmitted) : new Date('March 18, 2016');
-        doc.lastEdited= item.datesEdited ? new Date(item.datesEdited[item.datesEdited.length-1][0]) : new Date('March 18, 2016');
+//        doc.createdAt= item.createdAt ? new Date(item.createdAt) : new Date('March 18, 2016');
+//        doc.updatedAt= item.updatedAt ? new Date(item.updatedAt) : new Date('March 18, 2016');
         //doc.dateSubmitted = new Date(item.dateSubmitted || 'March 18 2016');
         //doc.lastEdited = new Date(item.dateSubmitted || 'March 18 2016');
       }
