@@ -3,19 +3,19 @@ const client = require('../elasticsearch');
 const mw = require('../config/middleware');
 const CronJob = require('cron').CronJob;
 
-var hardUpdate = new CronJob('0 0 0 * * *',  () => {
+var hardUpdate = new CronJob('0 * * * * *',  () => {
   console.log('cron task activated');
   utils.clearAllDocuments()
   .then(() => {
-    utils.getAllFromDb('kb')
+    utils.getAllFromDb(null, 'kb')
     .then((docs) => {
       utils.bulkAdd(docs, 'kb')
     })
   })
   .then(() => {
-    utils.getAllFromDb('ticket')
+    utils.getAllFromDb(null, 'ticket')
     .then(docs => {
-      utils.bulkAdds(docs, 'ticket')
+      utils.bulkAdd(docs, 'ticket')
     })
   })
   .catch(err => {

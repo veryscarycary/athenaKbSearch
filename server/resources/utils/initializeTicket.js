@@ -31,8 +31,8 @@ module.exports = () => {
             product: {
               type: 'string',
             },
-            resolved: {
-              type: 'boolean',
+            status: {
+              type: 'string',
             },
             customerId: {
               type: 'string',
