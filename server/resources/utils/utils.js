@@ -1,9 +1,10 @@
 const client = require('../../elasticsearch');
 const mw = require('../../config/middleware');
 const kbDb = require('../../config/urls').kb.database;
+const ticketDb = require('../../config/urls').ticket.database;
 const Sequelize = require('sequelize');
 const kbSequelize = new Sequelize(kbDb);
-const ticketDb = require('../../config/urls').ticket.masterDatabase;
+const ticketSequelize = new Sequelize(ticketDb);
 
 
 module.exports = {
@@ -16,7 +17,8 @@ module.exports = {
   },
 
   testPostgres: () => {
-    return kbSequelize.query('SELECT * from articles', {type: Sequelize.QueryTypes.select})
+    return ticketSequelize.query("SELECT * FROM tickets WHERE 'createdAt' > '2016-01-01'");
+    //return kbSequelize.query("SELECT * FROM articles WHERE 'createdAt' > '2016-01-01'");
   },
 
   bulkAdd: (arr, type) => {
@@ -59,27 +61,35 @@ module.exports = {
     return new Promise((resolve, reject) => {
       client.search({
         _index: type,
+        ignore:404,
         body: {
           sort: [
-            { lastEdited: {order: "desc"} },
+            { updatedAt: {order: "desc"} },
           ]
         }
       }, (err, res) => {
         if (err) { reject(err) };
-        console.log(res);
-        date = res.hits.hits[0]._source.updatedAt;
+        date = res.hits ? res.hits.hits[0]._source.updatedAt : false;
+        if (date === null) {
+          return(false);
+        }
       })
       client.search({
         _index: type,
+        ignore:404,
         body: {
           sort: [
-            { dateSubmitted: {order: "desc"} },
+            { createdAt: {order: "desc"} },
           ]
         }
       }, (err, res) => {
         if (err) { reject(err) };
-        var compare = res.hits.hits[0]._source.createdAt;
-        date = date > compare ? date : compare;
+        var compare = res.hits ? res.hits.hits[0]._source.updatedAt : false;
+        if (date && compare) {
+          date = date > compare ? date : compare;
+        } else {
+          reject(false);
+        }
         resolve(date);
       })
     })
@@ -88,7 +98,7 @@ module.exports = {
   getAllRecords: (type) => {
     return client.search({
       index: type,
-//      type: 'article',
+      //      type: 'article',
       size: 10,
       body: {
         query: {
@@ -102,35 +112,56 @@ module.exports = {
     if (type === 'kb') {
       return new Promise((resolve, reject) => {
         if (!query) {
-          console.log('I\'m in, query: ', query, ' type:  ', type);
           return kbSequelize.query('SELECT * from articles')
-            .then(docs => resolve(docs));
+          .then(docs => resolve(docs));
         } else {
           return kbSequelize.query(query, {type: sequelize.QueryTypes.select})
-            .then(docs => resolve(docs));
+          .then(docs => resolve(docs));
         }
       })
       .catch(err => reject(err));
     } else {
-     return new Promise((resolve, reject) => {
-      mw.mongodb.MongoClient.connect(mw.urls[type].masterDatabase, (err, db) => {
-        if (err) { reject(err); }
-        var collection = 'tickets';
+      return new Promise((resolve, reject) => {
         if (!query) {
-          db.collection(collection).find().toArray((err, docs) => {
-            if (err) { reject(err); }
-            resolve(docs);
-          })
+          return ticketSequelize.query('SELECT * from tickets')
+          .then(docs => resolve(docs[0]));
         } else {
-          db.collection(collection).find(query).toArray((err, docs) => {
-            if (err) { reject(err); }
-            resolve(docs);
-          })
+          return ticketSequelize.query(query, {type: sequelize.QueryTypes.select})
+          .then(docs => resolve(docs[0]));
         }
       })
-    });
-  }
-},
+      .catch(err => reject(err));
+    }
+  },
+
+  //searchProductByDate: (options) => {
+    //// options: type='*' || 'ticket' || 'kb'
+    ////          product: product
+    ////          startDate: date
+    ////          endDate: date
+
+    //return client.search({
+      //index: options.index,
+      //body: {
+        //fields: [
+          //'_source',
+        //],
+        //query: {
+          //bool: {
+            //must: [
+              //{term: {products: options.product}}
+            //],
+            //range: {
+              //dateSubmitted: {
+                //gte: options.startDate,
+                //lte: options.endDate || new Date(),
+              //}
+            //}
+          //}
+        //}
+      //}
+    //})
+  //},
 
   basicSearch: (options) => {
     var product = {
@@ -140,7 +171,7 @@ module.exports = {
       term: {tickets: options.ticketId},
     };
     var range = {
-      dateSubmitted: {
+      createdAt: {
         gte: options.startDate ? options.startDate : "",
         lte: options.endDate ? options.endDate : new Date(),
       }
@@ -214,43 +245,44 @@ module.exports = {
           fields: [
             '_source',
           ],
-//          query: {
-//            function_score: {
+          query: {
+            function_score: {
               query: {
                 bool: {
                   should: [
                     {
                       multi_match: {
                         query: options.term,
-                        fields: ['issue^3', 'solution', 'product^3'],
+                        fields: ['issue^3', 'solution', 'issuePreview', 'product^3'],
+                      }
+                    },
+                    {
+                      multi_match: {
+                        query: 'unresolved',
+                        fields: ['status']
                       }
                     }
                   ],
                 }
               },
-//              functions: [
-                //{
-                  //field_value_factor: {
-                    //field: 'viewCount',
-                    //modifier: 'log1p',
-                    //factor: 3,
-                  //}
-                //},
-//                {
-//                  field_value_factor: {
-//                    field: 'dateSubmitted',
-//                    modifier: 'log1p',
-//                  }
-//                },
-//                {
-//                  field_value_factor: {
-//                    field: 'lastEdited',
-//                    modifier: 'log1p',
-//                  }
-//                }
-//              ]
-//            }
-//          }
+              functions: [
+                {
+                  field_value_factor:
+                    {
+                      field: 'createdAt',
+                      modifier: 'log1p',
+                    }
+                },
+                {
+                  field_value_factor:
+                    {
+                      field: 'updatedAt',
+                      modifier: 'log1p',
+                    }
+                }
+              ]
+            }
+          }
         }
       })
     }
@@ -279,13 +311,13 @@ const formatArticlesForBulkAdd = (arr, type) => {
       } else if (type === 'ticket') {
         doc.product = item.product;
         doc.customerId = item.customerId;
-        doc.resolved = item.resolved;
-        doc.relatedArticles = item.relatedArticles;
+        doc.status = item.status;
+        doc.solution = item.solution;
+        doc.title = item.title;
+        doc.createdAt = new Date(item.createdAt);
+        doc.updatedAt = new Date(item.updatedAt);
+        doc.issuePreview = item.issuePreview;
         doc.solution = item.solution || '';
-//        doc.createdAt= item.createdAt ? new Date(item.createdAt) : new Date('March 18, 2016');
-//        doc.updatedAt= item.updatedAt ? new Date(item.updatedAt) : new Date('March 18, 2016');
-        //doc.dateSubmitted = new Date(item.dateSubmitted || 'March 18 2016');
-        //doc.lastEdited = new Date(item.dateSubmitted || 'March 18 2016');
       }
       if (resp.exists) {
         doc = {doc: doc};

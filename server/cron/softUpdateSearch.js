@@ -3,34 +3,43 @@ const client = require('../elasticsearch');
 const mw = require('../config/middleware');
 const CronJob = require('cron').CronJob;
 
-const softUpdate = new CronJob('0 */5 * * * *', () => {
+
+const softUpdate = new CronJob('0 * * * * *', () => {
   console.log('cron task activated: ', new Date());
   utils.getLatestDate('kb')
   .then(date => {
-    utils.getAllFromDb({dateSubmitted: {$gte: date}}, 'kb')
-    .then(newDocs => {
-      utils.getAllFromDb({dateLastEdited: {$gte: date}}, 'kb')
-      .then(updatedDocs => {
-        var allDocs = newDocs.concat(updatedDocs);
-        if (allDocs) {
-          utils.bulkAdd(allDocs, 'kb')
-        };
+    if (date) {
+      utils.getAllFromDb("SELECT * FROM articles WHERE 'createdAt' > ${date}", 'kb')
+        .then(newDocs => {
+          utils.getAllFromDb("SELECT * FROM articles WHERE 'updatedAt' > ${date}", 'kb')
+            .then(updatedDocs => {
+              var allDocs = newDocs ? newDocs.concat(updatedDocs) : updatedDocs;
+              if (allDocs) {
+                utils.bulkAdd(allDocs, 'kb')
+              };
+            })
+          })
+        } else {
+          resolve('updated');
+        }
       })
-    })
-  })
-    //.then(() => {
-    //utils.getLatestDate('ticket')
-    //.then(date => {
-    //utils.getAllFromDb({dateSubmitted: {$gte: date}}, 'ticket')
-    //.then(newDocs => {
-    //utils.getAllFromDb({dateLastEdited: {$gte: date}}, 'ticket')
-    //.then(updatedDocs => {
-    //var allDocs = newDocs.concat(updatedDocs);
-    //utils.bulkAdd(allDocs, 'ticket')
-    //})
-    //})
-    //})
-//})
+      .then(utils.getLatestDate('ticket')
+        .then(date => {
+          if (date) {
+            utils.getAllFromDb("SELECT * FROM tickets WHERE 'createdAt' > ${date}", 'ticket')
+              .then(newDocs => {
+                utils.getAllFromDb("SELECT * FROM tickets WHERE 'updatedAt' > ${date}", 'ticket')
+                  .then(updatedDocs => {
+                    var allDocs = newDocs ? newDocs.concat(updatedDocs) : updatedDocs;
+                    if (allDocs) {
+                      utils.bulkAdd(allDocs, 'ticket')
+                    };
+                  })
+                })
+              } else {
+                resolve('updated');
+              }
+            }))
   .catch(err => {
     softUpdate.stop();
     console.log('Error creating cron task: ', new Date(), err);

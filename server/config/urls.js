@@ -25,7 +25,6 @@ module.exports = {
   ticket: {
     default: 3004,
     //database: `${DIALECT}://${HOST}/${DB}`,
-    masterDatabase: `mongodb://${MASTER_HOST}:27017/${TDB}`,
-    masterDatabaseName: 'TDB',
-  }
+    database: `${DIALECT}://${DB_USR}:${DB_PASS}@${HOST}:${ PORT}/${TDB}`,
+}
 };

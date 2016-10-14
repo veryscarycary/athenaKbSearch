@@ -7,6 +7,22 @@ module.exports = {
     utils.ping();
   },
 
+  searchForProductByDate: (req,res) => {
+    var options = {
+      type:req.query.type,
+      product: req.query.product,
+      startDate: req.query.startDate,
+      endDate:req.query.endDate,
+    }
+    utils.searchProductsByDate(options)
+      .then(docs => {
+        res.status(200).send(docs)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
   searchAll: (req, res) => {
     utils.searchAll(req.query.type)
       .then(docs => {
@@ -41,7 +57,7 @@ module.exports = {
     var type = req.query.type
     utils.getAllFromDb(null, type)
       .then(docs => {
-        console.log('I AM DOCS', docs);
+        docs = docs;
         utils.bulkAdd(docs, type)
           .then(resp => {
             console.log('resp',resp);
@@ -106,17 +122,15 @@ module.exports = {
     var options = {
       type: req.query.type,
       term: req.query.term,
-      archived: req.query.archived,
       product: req.query.product,
       dateStart: req.query.dateStart,
       dateEnd: req.query.dateEnd,
-      tickedId: req.query.ticketId,
     }
-    console.log('THis is the term: ', req.query.term);
-    console.log('these are the options: ', options);
+    if (options.type === 'kb') {
+      options.archived = req.query.archived;
+    }
     utils.basicSearch(options)
       .then(result => {
-        console.log(result)
         res.status(200).send(result.hits.hits);
       })
       .catch(err => {

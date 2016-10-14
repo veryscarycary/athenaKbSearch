@@ -9,7 +9,7 @@ const initializeTicket = require('./resources/utils/initializeTicket');
 require('./server.js').listen(port, () => {
   initializeKb();
   initializeTicket();
-  require('./cron/softUpdateSearch');
+//  require('./cron/softUpdateSearch');
   require('./cron/dumpAndUpdateSearch');
   console.log(mw.chalk.green.bold(`\n Athena KB Search RESTful API listening on port ${port}.`))
 });
