@@ -1,6 +1,11 @@
 const elasticsearch = require('elasticsearch');
 
-module.exports = new elasticsearch.Client({
+const client = new elasticsearch.Client({
   host: 'localhost:9200',
-  log: 'trace'
-})
+  log: {
+    level: 'trace',
+  },
+});
+
+module.exports = client;
+

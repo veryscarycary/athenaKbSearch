@@ -1,6 +1,5 @@
 const mw = require('../config/middleware');
 const request = mw.request;
-const url = mw.urls.database;
 const utils = require('./utils/utils');
 
 module.exports = {
@@ -8,22 +7,65 @@ module.exports = {
     utils.ping();
   },
 
-  addIndex: (req, res) => {
-    utils.getAllFromDb()
+  searchAll: (req, res) => {
+    utils.searchAll(req.query.type)
       .then(docs => {
-        utils.bulkAdd(docs)
+        res.status(200).send(docs)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
+  testPostgres: (req, res) => {
+    utils.testPostgres()
+      .then(docs => {
+        res.status(200).send(docs)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
+  getAllRecords: (req,res) => {
+    utils.getAllRecords(req.params.type)
+      .then(docs => {
+        res.status(200).send(docs)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  },
+
+  addIndex: (req, res) => {
+    var type = req.query.type
+    utils.getAllFromDb(null, type)
+      .then(docs => {
+        console.log('I AM DOCS', docs);
+        utils.bulkAdd(docs, type)
           .then(resp => {
+            console.log('resp',resp);
             res.status(200).send(resp);
           })
           .catch(err => {
-            console.log('error!!');
+            console.log(err);
             res.status(503).send(err);
           })
       })
   },
+  checkIndexExists: (req, res) => {
+    utils.checkIndexExists(req.query.type)
+      .then(resp => {
+        res.status(200).send(resp);
+      })
+      .catch(err => {
+        console.log('error', err);
+        res.status(503).send('error');
+      })
+  },
 
   findMostRecent: (req, res) => {
-    var date = utils.getLatestDate()
+    var date = utils.getLatestDate(req.query.type)
       .then(resp => {
         res.status(200).send(resp);
       })
@@ -33,7 +75,7 @@ module.exports = {
   },
 
   mapping: (req, res) => {
-    utils.getMappingOfIndex('kb')
+    utils.getMappingOfIndex(req.query.type)
       .then(resp => {
         res.status(200).send(resp)
       })
@@ -43,7 +85,7 @@ module.exports = {
   },
 
   deleteAllRecords: (req, res) => {
-    utils.clearAllDocuments()
+    utils.clearAllDocuments(req.query.type)
       .then(resp => {
         res.status(200).send('all documents successfully deleted');
       })
@@ -52,7 +94,7 @@ module.exports = {
       });
   },
   count: (req, res) => {
-    utils.countAllDocuments()
+    utils.countAllDocuments(req.query.type)
       .then(resp => {
         res.status(200).send(resp);
       })
@@ -61,8 +103,8 @@ module.exports = {
       });
   },
   search: (req, res) => {
-    console.log('HERE IS THE QUERY',req.query);
     var options = {
+      type: req.query.type,
       term: req.query.term,
       archived: req.query.archived,
       product: req.query.product,
@@ -70,8 +112,11 @@ module.exports = {
       dateEnd: req.query.dateEnd,
       tickedId: req.query.ticketId,
     }
+    console.log('THis is the term: ', req.query.term);
+    console.log('these are the options: ', options);
     utils.basicSearch(options)
       .then(result => {
+        console.log(result)
         res.status(200).send(result.hits.hits);
       })
       .catch(err => {
