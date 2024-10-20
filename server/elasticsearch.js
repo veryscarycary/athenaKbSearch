@@ -1,9 +1,9 @@
-const elasticsearch = require('elasticsearch');
+const { Client } = require('@elastic/elasticsearch');
 const HOST = process.env.DOCKER_COMPOSE ? 'elasticsearch' : 'localhost';
 const PORT = 9200;
 
-const client = new elasticsearch.Client({
-  host: `${HOST}:${PORT}`,
+const client = new Client({
+  node: `${HOST}:${PORT}`,
   log: {
     level: 'trace',
   },
