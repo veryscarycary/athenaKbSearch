@@ -2,9 +2,6 @@ const client = require('../../elasticsearch');
 const utils = require('./utils');
 
 module.exports = () => {
-  console.log('Begin initializing KB');
-
-  // Delete the existing index if it exists
   client.indices
     .delete({
       index: 'kb',
@@ -12,9 +9,7 @@ module.exports = () => {
     })
     .then(() => {
       console.log('KB indices deleted!');
-      return client.indices.create({
-        index: 'kb',
-      });
+      return client.indices.create({ index: 'kb' });
     })
     .then(() => {
       console.log('KB indices created!');
@@ -57,6 +52,8 @@ module.exports = () => {
             },
           },
         },
+      }).catch(err => {
+        throw new Error(`Error updating mapping: ${err.message}`);
       });
     })
     .then(() => {
@@ -71,13 +68,15 @@ module.exports = () => {
       console.log('KB initialized successfully!');
     })
     .catch((err) => {
-      // Enhanced error handling with detailed logging
       console.error('Error initializing KB:');
+      console.error(`Context: ${err.message}`);
       console.error(`Status Code: ${err.statusCode || 'N/A'}`);
+      console.error('Error Message:', err.message);
       if (err.meta && err.meta.body) {
         console.error('Error Response Body:', JSON.stringify(err.meta.body, null, 2));
-      } else {
-        console.error('Error Message:', err.message);
+      }
+      if (err.meta && err.meta.request) {
+        console.error('Request Object:', JSON.stringify(err.meta.request, null, 2));
       }
     });
 };
