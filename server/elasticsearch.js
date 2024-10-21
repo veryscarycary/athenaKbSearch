@@ -3,7 +3,7 @@ const HOST = process.env.DOCKER_COMPOSE ? 'elasticsearch' : 'localhost';
 const PORT = 9200;
 
 const client = new Client({
-  node: `${HOST}:${PORT}`,
+  node: `http://${HOST}:${PORT}`,
   log: {
     level: 'trace',
   },
