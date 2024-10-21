@@ -25,16 +25,16 @@ module.exports = () => {
                     type: 'long',
                   },
                   issue: {
-                    type: 'string',
+                    type: 'text',
                   },
                   issuePreview: {
-                    type: 'string',
+                    type: 'text',
                   },
                   title: {
-                    type: 'string',
+                    type: 'text',
                   },
                   solution: {
-                    type: 'string',
+                    type: 'text',
                   },
                   updatedAt: {
                     type: 'date',

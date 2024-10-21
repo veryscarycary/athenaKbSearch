@@ -22,25 +22,25 @@ module.exports = () => {
         body: {
           properties: {
             id: {
-              type: 'string',
+              type: 'text',
             },
             issue: {
-              type: 'string',
+              type: 'text',
             },
             solution: {
-              type: 'string',
+              type: 'text',
             },
             product: {
-              type: 'string',
+              type: 'text',
             },
             status: {
-              type: 'string',
+              type: 'text',
             },
             customerId: {
-              type: 'string',
+              type: 'text',
             },
             relatedArticles: {
-              type: 'string',
+              type: 'text',
             },
             createdAt: {
               type: 'date',
