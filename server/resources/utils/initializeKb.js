@@ -61,6 +61,7 @@ module.exports = () => {
       return utils.getAllFromDb(null, 'kb');
     })
     .then((docs) => {
+      console.log('docs:' + JSON.stringify(docs));
       console.log(`${docs.length} documents fetched from the database.`);
       return utils.bulkAdd(docs, 'kb');
     })
