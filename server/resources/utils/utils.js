@@ -124,7 +124,7 @@ module.exports = {
       return new Promise((resolve, reject) => {
         const queryString = query ? query : 'SELECT * from tickets';
         return ticketSequelize.query(queryString, { type: Sequelize.QueryTypes.SELECT })
-          .then((docs) => resolve(docs[0]))
+          .then((docs) => resolve(docs))
           .catch((err) => reject(err));
       });
     }
