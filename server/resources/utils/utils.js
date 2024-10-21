@@ -339,11 +339,11 @@ const formatArticlesForBulkAdd = (arr, type) => {
 };
 
 const checkDocExists = (id, type) => {
-  return client.searchExists({
+  return client.exists({
     index: type,
+    id: id,
     ignore: 404,
-    ignoreUnavailable: true,
-    q: id
-  })
+    ignoreUnavailable: true
+  });
 };
 
