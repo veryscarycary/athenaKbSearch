@@ -7,9 +7,6 @@ const kbSequelize = new Sequelize(kbDb);
 const ticketSequelize = new Sequelize(ticketDb);
 
 
-// Initialize Elasticsearch client
-const client = new Client({ node: 'http://localhost:9200' }); // Adjust the node URL as needed
-
 module.exports = {
   ping: () => {
     client.ping({ requestTimeout: 3000 }, (err) => {
