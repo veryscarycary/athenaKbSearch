@@ -4,6 +4,7 @@ const utils = require('./utils');
 module.exports = () => {
   console.log('Begin initializing ticket');
 
+  // Delete the existing index if it exists
   client.indices
     .delete({
       index: 'ticket',
@@ -11,18 +12,22 @@ module.exports = () => {
     })
     .then(() => {
       console.log('Ticket indices deleted!');
+
+      // Create a new index
       return client.indices.create({
         index: 'ticket',
       });
     })
     .then(() => {
       console.log('Ticket indices created!');
+
+      // Define the mapping for the new index
       return client.indices.putMapping({
         index: 'ticket',
         body: {
           properties: {
             id: {
-              type: 'text',
+              type: 'text', // Consider using 'keyword' if this is for filtering/searching
             },
             issue: {
               type: 'text',
@@ -55,15 +60,28 @@ module.exports = () => {
       });
     })
     .then(() => {
+      console.log('Mapping updated successfully!');
+
+      // Fetch documents from the database
       return utils.getAllFromDb(null, 'ticket');
     })
     .then((docs) => {
+      console.log(`${docs.length} documents fetched from the database.`);
+
+      // Bulk add documents to the new index
       return utils.bulkAdd(docs, 'ticket');
     })
     .then(() => {
       console.log('Ticket initialized successfully!');
     })
     .catch((err) => {
-      console.log('Error initializing ticket, ', err);
+      // Enhanced error handling with detailed logging
+      console.error('Error initializing ticket:');
+      console.error(`Status Code: ${err.statusCode || 'N/A'}`);
+      if (err.meta && err.meta.body) {
+        console.error('Error Response Body:', JSON.stringify(err.meta.body, null, 2));
+      } else {
+        console.error('Error Message:', err.message);
+      }
     });
 };
