@@ -175,7 +175,7 @@ module.exports = {
 };
 
 const formatArticlesForBulkAdd = (arr, type) => {
-  const docs = type === 'kb' ? arr[0] : arr;
+  const docs = arr;
   return Promise.all(docs.map((item) => {
     return checkDocExists(item.id, type)
       .then((resp) => {
