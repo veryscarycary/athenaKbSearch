@@ -210,10 +210,7 @@ const formatArticlesForBulkAdd = (arr, type) => {
       });
   }))
   .then((arr) => {
-    const bulkAdds = [];
-    arr.forEach((item) => {
-      bulkAdds.push(item[0], item[1]);
-    });
+    const bulkAdds = arr.reduce((acc, item) => acc.concat(item), []);
     console.log(bulkAdds);
     return bulkAdds;
   });
