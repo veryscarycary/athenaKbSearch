@@ -181,6 +181,7 @@ const formatArticlesForBulkAdd = (arr, type) => {
   return Promise.all(docs.map((item) => {
     return checkDocExists(item.id, type)
       .then((resp) => {
+        console.log('DOCEXISTS RESP: ' + JSON.stringify(resp));
         let doc, header, action;
         action = resp ? 'update' : 'index';
         doc = {
