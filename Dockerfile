@@ -1,5 +1,5 @@
 # Use the Node.js 8.17.0 based on Debian Buster
-FROM node:8.17.0-buster
+FROM node:10
 
 # Set the working directory
 WORKDIR /usr/src/app
