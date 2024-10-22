@@ -183,7 +183,7 @@ const formatArticlesForBulkAdd = (arr, type) => {
       .then((resp) => {
         console.log('DOCEXISTS RESP: ' + JSON.stringify(resp));
         let doc, header, action;
-        action = resp ? 'update' : 'index';
+        action = resp.body ? 'update' : 'index';
         doc = {
           id: item.id,
           issue: item.issue,
