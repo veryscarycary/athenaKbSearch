@@ -15,6 +15,8 @@ const softUpdate = new CronJob('0 * * * * *', () => {
             .then(updatedDocs => {
               var allDocs = newDocs ? newDocs.concat(updatedDocs) : updatedDocs;
               if (allDocs) {
+                console.log('SOFTUPDATE ALLDOCS KB: ', docs);
+
                 utils.bulkAdd(allDocs, 'kb')
               };
             })
@@ -32,6 +34,8 @@ const softUpdate = new CronJob('0 * * * * *', () => {
                   .then(updatedDocs => {
                     var allDocs = newDocs ? newDocs.concat(updatedDocs) : updatedDocs;
                     if (allDocs) {
+                      console.log('SOFTUPDATE ALLDOCS TICKET: ', docs);
+
                       utils.bulkAdd(allDocs, 'ticket')
                     };
                   })
