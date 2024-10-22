@@ -131,11 +131,12 @@ module.exports = {
     }
     utils.basicSearch(options)
       .then(result => {
+        console.log(`basicSearch result: ${JSON.stringify(result)}`);
         res.status(200).send(result.hits.hits);
       })
       .catch(err => {
         console.log(`basicSearch Error: ${err}`);
-        console.log(`basicSearch options: ${options}`);
+        console.log(`basicSearch options: ${JSON.stringify(options)}`);
         res.status(404).send(err);
       })
   }
