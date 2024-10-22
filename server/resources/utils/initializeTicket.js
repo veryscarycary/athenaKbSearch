@@ -71,7 +71,8 @@ module.exports = () => {
       // Bulk add documents to the new index
       return utils.bulkAdd(docs, 'ticket');
     })
-    .then(() => {
+    .then((resp) => {
+      console.log('bulkAdd Response: ' + JSON.stringify(resp));
       console.log('Ticket initialized successfully!');
     })
     .catch((err) => {
