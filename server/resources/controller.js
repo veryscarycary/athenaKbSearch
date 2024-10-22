@@ -134,6 +134,8 @@ module.exports = {
         res.status(200).send(result.hits.hits);
       })
       .catch(err => {
+        console.log(`basicSearch Error: ${err}`);
+        console.log(`basicSearch options: ${options}`);
         res.status(404).send(err);
       })
   }
