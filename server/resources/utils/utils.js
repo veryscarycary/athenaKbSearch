@@ -26,6 +26,7 @@ module.exports = {
   bulkAdd: (arr, type) => {
     return formatArticlesForBulkAdd(arr, type)
       .then((bulk) => {
+        console.log('BULK AFTER FORMATTING: ' + JSON.stringify(bulk));
         return client.bulk({ body: bulk }).catch((err) => console.log('BULK ERROR: '+ err));
       });
   },
