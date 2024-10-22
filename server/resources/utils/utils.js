@@ -221,8 +221,6 @@ const checkDocExists = (id, type) => {
   return client.exists({
     index: type,
     id: id,
-    ignore: [404],
-    ignoreUnavailable: true,
   }).catch((err) => {
     console.log('EXISTS error: ' + JSON.stringify(err));
   });
