@@ -66,8 +66,7 @@ module.exports = () => {
       return utils.getAllFromDb(null, 'ticket');
     })
     .then((docs) => {
-      console.log('docs:' + JSON.stringify(docs));
-      console.log(`${docs.length} documents fetched from the database.`);
+      console.log(`${docs.length} Ticket documents fetched from the database.`);
 
       // Bulk add documents to the new index
       return utils.bulkAdd(docs, 'ticket');

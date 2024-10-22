@@ -26,7 +26,6 @@ module.exports = {
   bulkAdd: (arr, type) => {
     return formatArticlesForBulkAdd(arr, type)
       .then((bulk) => {
-        console.log(`bulk: ${JSON.stringify(bulk)}`);
         return client.bulk({ body: bulk }).catch((err) => console.log('BULK ERROR: '+ err));
       });
   },
@@ -212,7 +211,6 @@ const formatArticlesForBulkAdd = (arr, type) => {
   }))
   .then((arr) => {
     const bulkAdds = arr.reduce((acc, item) => acc.concat(item), []);
-    console.log('BULKADDS: ' + JSON.stringify(bulkAdds));
     return bulkAdds;
   });
 };
