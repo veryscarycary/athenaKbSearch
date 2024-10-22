@@ -26,7 +26,8 @@ module.exports = {
   bulkAdd: (arr, type) => {
     return formatArticlesForBulkAdd(arr, type)
       .then((bulk) => {
-        return client.bulk({ body: bulk });
+        console.log(`bulk: ${JSON.stringify(bulk)}`);
+        return client.bulk({ body: bulk }).catch((err) => console.log('BULK ERROR: '+ err));
       });
   },
 
@@ -211,7 +212,7 @@ const formatArticlesForBulkAdd = (arr, type) => {
   }))
   .then((arr) => {
     const bulkAdds = arr.reduce((acc, item) => acc.concat(item), []);
-    console.log(bulkAdds);
+    console.log('BULKADDS: ' + JSON.stringify(bulkAdds));
     return bulkAdds;
   });
 };
@@ -222,5 +223,7 @@ const checkDocExists = (id, type) => {
     id: id,
     ignore: [404],
     ignoreUnavailable: true,
+  }).catch((err) => {
+    console.log('EXISTS error: ' + JSON.stringify(err));
   });
 };
