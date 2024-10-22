@@ -31,6 +31,7 @@ module.exports = {
   },
 
   searchAll: (type) => {
+    console.log();
     return client.search({
       index: type,
       body: {
@@ -38,7 +39,7 @@ module.exports = {
           match_all: {},
         },
       },
-    });
+    }).catch((err) => console.log(`searchAll Error: ${err}`));
   },
 
   countAllDocuments: (type) => {
@@ -109,7 +110,7 @@ module.exports = {
           match_all: {},
         },
       },
-    });
+    }).catch((err) => console.log(`getAllRecords Error: ${err}`));
   },
 
   getAllFromDb: (query, type) => {
@@ -170,7 +171,7 @@ module.exports = {
     return client.search({
       index: options.type === 'kb' ? 'kb' : 'ticket',
       body: searchBody,
-    });
+    }).catch((err) => console.log(`basicSearch Error: ${err}`));
   },
 };
 
