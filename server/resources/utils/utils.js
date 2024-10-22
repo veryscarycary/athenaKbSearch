@@ -9,7 +9,7 @@ const ticketSequelize = new Sequelize(ticketDb);
 
 module.exports = {
   ping: () => {
-    client.ping({ master_timeout: 3000 }, (err) => {
+    client.ping({}, { requestTimeout: 3000 }, (err) => {
       if (err) {
         console.error('Elasticsearch server stopped: ', err);
       } else {
