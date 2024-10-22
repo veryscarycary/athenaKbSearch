@@ -132,7 +132,7 @@ module.exports = {
     utils.basicSearch(options)
       .then(result => {
         console.log(`basicSearch result: ${JSON.stringify(result)}`);
-        res.status(200).send(result.hits.hits);
+        res.status(200).send(result.body.hits.hits);
       })
       .catch(err => {
         console.log(`basicSearch Error: ${err}`);
