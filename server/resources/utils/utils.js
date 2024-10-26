@@ -158,9 +158,6 @@ module.exports = {
       query: {
         bool: {
           must,
-          filter: {
-            term: { "doc.archived": options.archived === "true" },
-          },
           should: [
             {
               multi_match: {
@@ -171,13 +168,14 @@ module.exports = {
                   'doc.issue',
                   'doc.solution'
                 ],
-                fuzziness: "AUTO",  // Allows approximate matches
-                operator: "or",      // Increases match options
+                fuzziness: "AUTO",
+                operator: "or",
+                type: "phrase_prefix"
               },
             },
             {
               wildcard: {
-                "doc.title": `*${options.term}*`
+                "doc.title.keyword": `*${options.term.toLowerCase()}*`
               }
             }
           ],
