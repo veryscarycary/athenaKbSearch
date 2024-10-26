@@ -133,17 +133,31 @@ module.exports = {
   },
 
   basicSearch: (options) => {
+    console.log('BASIC SEARCH OPTIONS: ' + JSON.stringify(options));
+    console.log('TESTTTT');
     const must = [];
+    
+    // Add specific ID filtering if an ID is provided
+    if (options.id) {
+      must.push({ term: { _id: options.id } });
+    }
+
+    // Add relatedProducts for 'kb' or product/customerId/status for 'ticket'
     if (options.product) {
-      must.push({ term: { relatedProducts: options.product } });
+      must.push({ term: { "doc.product": options.product } });
     }
-    if (options.ticket) {
-      must.push({ term: { tickets: options.ticketId } });
+    if (options.ticketId) {
+      must.push({ term: { "doc.customerId": options.ticketId } });
     }
-    if (options.range) {
+    if (options.status) {
+      must.push({ term: { "doc.status": options.status } });
+    }
+
+    // Add date range filtering for createdAt
+    if (options.startDate || options.endDate) {
       must.push({
         range: {
-          createdAt: {
+          "doc.createdAt": {
             gte: options.startDate || '',
             lte: options.endDate || new Date(),
           },
@@ -154,17 +168,25 @@ module.exports = {
     const searchBody = {
       query: {
         bool: {
+          must,  // Apply must conditions collected above
           filter: {
-            term: { archived: options.archived || false },
+            term: { "doc.archived": options.archived || false },  // Filter by archived status
           },
           should: [
             {
               multi_match: {
                 query: options.term,
-                fields: ['title^3', 'issuePreview^3', 'issue', 'solution'],
+                fields: [
+                  'doc.title^3',
+                  'doc.issuePreview^3',
+                  'doc.issue',
+                  'doc.solution'
+                ],
+                fuzziness: "AUTO"  // Optional: Use fuzziness for partial matches
               },
             },
           ],
+          minimum_should_match: options.term ? 1 : 0  // Ensure should clause is optional
         },
       },
     };
@@ -175,6 +197,7 @@ module.exports = {
     }).catch((err) => console.log(`basicSearch Error: ${err}`));
   },
 };
+
 
 const formatArticlesForBulkAdd = (arr, type) => {
   const docs = arr;
