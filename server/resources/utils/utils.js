@@ -133,27 +133,15 @@ module.exports = {
   },
 
   basicSearch: (options) => {
-    console.log('BASIC SEARCH OPTIONS: ' + JSON.stringify(options));
-    console.log('TESTTTT');
     const must = [];
-    
-    // Add specific ID filtering if an ID is provided
-    if (options.id) {
-      must.push({ term: { _id: options.id } });
-    }
 
-    // Add relatedProducts for 'kb' or product/customerId/status for 'ticket'
+    // Match by product or other conditions
     if (options.product) {
-      must.push({ term: { "doc.product": options.product } });
+      must.push({ match: { "doc.relatedProducts": options.product } });
     }
     if (options.ticketId) {
-      must.push({ term: { "doc.customerId": options.ticketId } });
+      must.push({ match: { "doc.tickets": options.ticketId } });
     }
-    if (options.status) {
-      must.push({ term: { "doc.status": options.status } });
-    }
-
-    // Add date range filtering for createdAt
     if (options.startDate || options.endDate) {
       must.push({
         range: {
@@ -165,12 +153,13 @@ module.exports = {
       });
     }
 
+    // Define a more flexible search body
     const searchBody = {
       query: {
         bool: {
-          must,  // Apply must conditions collected above
+          must,
           filter: {
-            term: { "doc.archived": options.archived || false },  // Filter by archived status
+            term: { "doc.archived": options.archived === "true" },
           },
           should: [
             {
@@ -178,15 +167,21 @@ module.exports = {
                 query: options.term,
                 fields: [
                   'doc.title^3',
-                  'doc.issuePreview^3',
+                  'doc.issuePreview^2',
                   'doc.issue',
                   'doc.solution'
                 ],
-                fuzziness: "AUTO"  // Optional: Use fuzziness for partial matches
+                fuzziness: "AUTO",  // Allows approximate matches
+                operator: "or",      // Increases match options
               },
             },
+            {
+              wildcard: {
+                "doc.title": `*${options.term}*`
+              }
+            }
           ],
-          minimum_should_match: options.term ? 1 : 0  // Ensure should clause is optional
+          minimum_should_match: 1
         },
       },
     };
@@ -197,6 +192,7 @@ module.exports = {
     }).catch((err) => console.log(`basicSearch Error: ${err}`));
   },
 };
+
 
 
 const formatArticlesForBulkAdd = (arr, type) => {
